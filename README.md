@@ -12,8 +12,9 @@
 
 * For easy usage on your own data, see [Demo.ipynb](https://github.com/Lin-Sinorodin/SwinIR_wrapper/blob/main/Demo.ipynb). This notebook will be displayed best using Google Colab which supports more interactive usage:
 
+
 <div align="center">
-<a href="https://github.com/Lin-Sinorodin/SwinIR_wrapper/blob/main/Demo.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"></a>
+<a href="https://colab.research.google.com/github/Lin-Sinorodin/SwinIR_wrapper/blob/main/Demo.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"></a>
 </div>
 
 
