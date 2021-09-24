@@ -20,6 +20,5 @@
 > sr.define_model(scale=4)
 > 
 > # feed the image to the SR model
-> sr_output = sr.upscale(img_lq)
-> img_hq = sr.model_output_to_numpy(sr_output)
+> img_hq = sr.upscale(img_lq)
 > ```
