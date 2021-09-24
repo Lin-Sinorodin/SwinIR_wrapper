@@ -79,6 +79,15 @@ class SwinIR_SR:
         img = torch.cat([img, torch.flip(img, [3])], 3)[:, :, :, :w_new]
         return img
 
+    @staticmethod
+    def _model_output_to_numpy(output: torch.tensor) -> np.array:
+        """convert the output of the SR model to cv2 format np.array. (from the official repo)"""
+        output = output.data.squeeze().float().cpu().clamp_(0, 1).numpy()
+        if output.ndim == 3:
+            output = np.transpose(output[[2, 1, 0], :, :], (1, 2, 0))  # CHW-RGB to HCW-BGR
+        output = (output * 255.0).round().astype(np.uint8)  # float32 to uint8
+        return output
+
     def define_model(self, scale: int):
         assert scale in self.scales, 'unsupported scale for this model_type'
         self.scale = scale
@@ -90,7 +99,7 @@ class SwinIR_SR:
 
         self.model = model.to(device)
 
-    def upscale(self, img: np.array) -> torch.tensor:
+    def upscale(self, img: np.array) -> np.array:
         """feed the given image to the super resolution model."""
         h_in, w_in, _ = img.shape
         h_out, w_out = h_in * self.scale, w_in * self.scale
@@ -98,20 +107,11 @@ class SwinIR_SR:
         with torch.no_grad():
             img = self._process_img_for_model(img)
             img = self._pad_img_for_model(img)
-            img_upscale = self.model(img)
+            img_upscale_tensor = self.model(img)[..., :h_out, :w_out]
 
-        return img_upscale[..., :h_out, :w_out]
+        return self._model_output_to_numpy(img_upscale_tensor)
 
-    @staticmethod
-    def model_output_to_numpy(output: torch.tensor) -> np.array:
-        """convert the output of the SR model to cv2 format np.array. (from the official repo)"""
-        output = output.data.squeeze().float().cpu().clamp_(0, 1).numpy()
-        if output.ndim == 3:
-            output = np.transpose(output[[2, 1, 0], :, :], (1, 2, 0))  # CHW-RGB to HCW-BGR
-        output = (output * 255.0).round().astype(np.uint8)  # float32 to uint8
-        return output
-
-    def upscale_using_patches(self, img_lq, slice_dim=256, slice_overlap=0, keep_pbar=False):
+    def upscale_using_patches(self, img_lq: np.array, slice_dim=256, slice_overlap=0, keep_pbar=False) -> np.array:
         """Apply super resolution on smaller patches and return full image"""
         scale = self.scale
         h, w, c = img_lq.shape
@@ -137,7 +137,7 @@ class SwinIR_SR:
 
             pbar.set_postfix(Status='Done')
 
-        return img_hq
+        return np.uint8(img_hq)
 
     @property
     def weights_name(self):
