@@ -4,9 +4,13 @@
 > [SwinIR: Image Restoration Using Swin Transformer](https://arxiv.org/abs/2108.10257).
 
 
-* `SwinIR.py` is a minimal wrapper for the super resolution model, making it easy to use as a part from a bigger pipeline.
-* Only enables the usage of the pretrained weights from the model zoo. For training, see the official repo.
-* Uses the PyTorch model [`network_swinir.py`](https://github.com/JingyunLiang/SwinIR/blob/main/models/network_swinir.py) from the official repo (unchanged).
+#### About SwinIR and this repository: 
+  * SwinIR achieves state-of-the-art performance on six tasks: image super-resolution (including classical, lightweight and real-world image super-resolution), image denoising (including grayscale and color image denoising) and JPEG compression artifact reduction.
+  * This repository only provides usage of the 3 image super-resolution tasks from SwinIR at the moment.
+  * `SwinIR.py` is a minimal wrapper for the super resolution model, making it easy to use as a part from a bigger pipeline.
+  * Only enables the usage of the pretrained weights from the [model zoo](https://github.com/JingyunLiang/SwinIR/tree/main/model_zoo). For training, see the official repo.
+  * Uses the PyTorch model [`network_swinir.py`](https://github.com/JingyunLiang/SwinIR/blob/main/models/network_swinir.py) from the official repo (unchanged).
+
 
 ## How to Use
 
