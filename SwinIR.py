@@ -128,8 +128,7 @@ class SwinIR_SR:
 
                     # apply super resolution on slice
                     img_slice = img_lq[h_slice:h_max, w_slice:w_max]
-                    sr_output = self.upscale(img_slice)
-                    img_slice_hq = self.model_output_to_numpy(sr_output)
+                    img_slice_hq = self.upscale(img_slice)
 
                     # update full image
                     img_hq[h_slice * scale:h_max * scale, w_slice * scale:w_max * scale] = img_slice_hq
