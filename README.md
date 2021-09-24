@@ -6,7 +6,7 @@
 
 * `SwinIR.py` is a minimal wrapper for the super resolution model, making it easy to use as a part from a bigger pipeline.
 * Only enables the usage of the pretrained weights from the model zoo. For training, see the official repo.
-* Based on the PyTorch model [`network_swinir.py`](https://github.com/JingyunLiang/SwinIR/blob/main/models/network_swinir.py) from the official repo.
+* Uses the PyTorch model [`network_swinir.py`](https://github.com/JingyunLiang/SwinIR/blob/main/models/network_swinir.py) from the official repo (unchanged).
 
 > This example demonstrates usage with only few lines:
 > ```python
