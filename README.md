@@ -1,7 +1,7 @@
 # Wrapper for SwinIR
 
 > Based on [__this repository__](https://github.com/JingyunLiang/SwinIR) - the official PyTorch implementation of
-> [SwinIR: Image Restoration Using Shifted Window Transformer](https://arxiv.org/abs/2108.10257).
+> [SwinIR: Image Restoration Using Swin Transformer](https://arxiv.org/abs/2108.10257).
 
 
 * `SwinIR.py` is a minimal wrapper for the super resolution model, making it easy to use as a part from a bigger pipeline.
