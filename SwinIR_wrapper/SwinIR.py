@@ -8,26 +8,36 @@ from .network_swinir import SwinIR as SwinIR_model
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 SwinIR_WEIGHTS_URL = 'https://github.com/JingyunLiang/SwinIR/releases/download/v0.0'
+SwinIR_MODEL_TYPES = ['classical_sr', 'lightweight', 'real_sr']
 
 
 class SwinIR_SR:
-    def __init__(self, model_type: str):
+    def __init__(self, model_type: str, scale: int):
+        assert model_type in SwinIR_MODEL_TYPES, f'unknown model_type, please choose from: {SwinIR_MODEL_TYPES}'
+        assert scale in self.scales, 'unsupported scale for this model_type'
+
         self.model_type = model_type
-
-        model_types = ['classical_sr', 'lightweight', 'real_sr']
-        assert model_type in model_types, f'unknown model_type, please choose from: {model_types}'
-
-        os.makedirs(self.weights_folder, exist_ok=True)
-
-        # initialized when calling self.define_model()
-        self.model = None
-        self.scale = None
+        self.scale = scale
+        self.model = self._load_model().to(device)
 
     def _download_model_weights(self):
         """downloads the pre-trained weights from GitHub model zoo."""
         if not os.path.exists(self.weights_path):
             os.system(f'wget {SwinIR_WEIGHTS_URL}/{self.weights_name} -P {self.weights_folder}')
             print(f'downloading weights to {self.weights_path}')
+
+    def _load_pretrained_weights(self):
+        self._download_model_weights()
+        pretrained_weights = torch.load(f'{self.weights_folder}/{self.weights_name}')
+
+        if self.model_type == 'classical_sr':
+            return pretrained_weights['params']
+
+        elif self.model_type == 'lightweight':
+            return pretrained_weights['params']
+
+        elif self.model_type == 'real_sr':
+            return pretrained_weights['params_ema']
 
     def _load_raw_model(self):
         model_hyperparams = {'upscale': self.scale, 'in_chans': 3, 'img_size': 64, 'window_size': 8,
@@ -47,18 +57,14 @@ class SwinIR_SR:
 
         return model
 
-    def _load_pretrained_weights(self):
-        self._download_model_weights()
-        pretrained_weights = torch.load(f'{self.weights_folder}/{self.weights_name}')
+    def _load_model(self):
+        os.makedirs(self.weights_folder, exist_ok=True)
+        pretrained_weights = self._load_pretrained_weights()
 
-        if self.model_type == 'classical_sr':
-            return pretrained_weights['params']
-
-        elif self.model_type == 'lightweight':
-            return pretrained_weights['params']
-
-        elif self.model_type == 'real_sr':
-            return pretrained_weights['params_ema']
+        model = self._load_raw_model()
+        model.load_state_dict(pretrained_weights, strict=True)
+        model.eval()
+        return model
 
     @staticmethod
     def _process_img_for_model(img: np.array) -> torch.tensor:
@@ -87,17 +93,6 @@ class SwinIR_SR:
             output = np.transpose(output[[2, 1, 0], :, :], (1, 2, 0))  # CHW-RGB to HCW-BGR
         output = (output * 255.0).round().astype(np.uint8)  # float32 to uint8
         return output
-
-    def define_model(self, scale: int):
-        assert scale in self.scales, 'unsupported scale for this model_type'
-        self.scale = scale
-
-        pretrained_weights = self._load_pretrained_weights()
-        model = self._load_raw_model()
-        model.load_state_dict(pretrained_weights, strict=True)
-        model.eval()
-
-        self.model = model.to(device)
 
     def upscale(self, img: np.array) -> np.array:
         """feed the given image to the super resolution model."""

@@ -25,14 +25,13 @@
 * As a quick preview, this example demonstrates usage with only few lines:
   ```python
   import cv2
-  from SwinIR import SwinIR_SR
+  from SwinIR_wrapper import SwinIR_SR
+  
+  # initialize super resolution model
+  sr = SwinIR_SR(model_type='real_sr', scale=4)
 
   # load low quality image
   img_lq = cv2.imread(path, cv2.IMREAD_COLOR)
-
-  # initialize super resolution model
-  sr = SwinIR_SR(model_type='real_sr')
-  sr.define_model(scale=4)
 
   # feed the image to the SR model
   img_hq = sr.upscale(img_lq)
