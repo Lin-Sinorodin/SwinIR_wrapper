@@ -33,7 +33,7 @@ class SwinIR_SR:
 
     def _download_model_weights(self):
         """downloads the pre-trained weights from GitHub model zoo."""
-        weights_name = WEIGHTS_NAME[self.model_type].replace('<scale>', self.scale)
+        weights_name = WEIGHTS_NAME[self.model_type].replace('<scale>', f'{self.scale}')
         weights_path = f'{WEIGHTS_FOLDER}/{weights_name}'
         if not os.path.exists(weights_path):
             os.system(f'wget {WEIGHTS_URL}/{weights_name} -P {WEIGHTS_FOLDER}')
