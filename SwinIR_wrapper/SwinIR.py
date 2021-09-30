@@ -7,14 +7,25 @@ from .network_swinir import SwinIR as SwinIR_model
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-SwinIR_WEIGHTS_URL = 'https://github.com/JingyunLiang/SwinIR/releases/download/v0.0'
-SwinIR_MODEL_TYPES = ['classical_sr', 'lightweight', 'real_sr']
+WEIGHTS_URL = 'https://github.com/JingyunLiang/SwinIR/releases/download/v0.0'
+WEIGHTS_FOLDER = f'{os.path.dirname(__file__)}/weights'
+WEIGHTS_NAME = {
+    'classical_sr': '001_classicalSR_DF2K_s64w8_SwinIR-M_x<scale>.pth',
+    'lightweight': '002_lightweightSR_DIV2K_s64w8_SwinIR-S_x<scale>.pth',
+    'real_sr': '003_realSR_BSRGAN_DFO_s64w8_SwinIR-M_x4_GAN.pth'
+}
+MODEL_TYPES = ['classical_sr', 'lightweight', 'real_sr']
+MODEL_SCALES = {
+    'classical_sr': [2, 3, 4, 8],
+    'lightweight': [2, 3, 4],
+    'real_sr': [4]
+}
 
 
 class SwinIR_SR:
     def __init__(self, model_type: str, scale: int):
-        assert model_type in SwinIR_MODEL_TYPES, f'unknown model_type, please choose from: {SwinIR_MODEL_TYPES}'
-        assert scale in self.scales, 'unsupported scale for this model_type'
+        assert model_type in MODEL_TYPES, f'unknown model_type, please choose from: {MODEL_TYPES}'
+        assert scale in MODEL_SCALES[model_type], 'unsupported scale for this model_type'
 
         self.model_type = model_type
         self.scale = scale
@@ -22,13 +33,17 @@ class SwinIR_SR:
 
     def _download_model_weights(self):
         """downloads the pre-trained weights from GitHub model zoo."""
-        if not os.path.exists(self.weights_path):
-            os.system(f'wget {SwinIR_WEIGHTS_URL}/{self.weights_name} -P {self.weights_folder}')
-            print(f'downloading weights to {self.weights_path}')
+        weights_name = WEIGHTS_NAME.replace('<scale>', self.scale)
+        weights_path = f'{WEIGHTS_FOLDER}/{weights_name}'
+        if not os.path.exists(weights_path):
+            os.system(f'wget {WEIGHTS_URL}/{weights_name} -P {WEIGHTS_FOLDER}')
+            print(f'downloading weights to {weights_path}')
+
+        return weights_path
 
     def _load_pretrained_weights(self):
-        self._download_model_weights()
-        pretrained_weights = torch.load(f'{self.weights_folder}/{self.weights_name}')
+        weights_path = self._download_model_weights()
+        pretrained_weights = torch.load(weights_path)
 
         if self.model_type == 'classical_sr':
             return pretrained_weights['params']
@@ -102,9 +117,10 @@ class SwinIR_SR:
         with torch.no_grad():
             img = self._process_img_for_model(img)
             img = self._pad_img_for_model(img)
-            img_upscale_tensor = self.model(img)[..., :h_out, :w_out]
+            img_upscale_torch = self.model(img)[..., :h_out, :w_out]
+            img_upscale_numpy = self._model_output_to_numpy(img_upscale_torch)
 
-        return self._model_output_to_numpy(img_upscale_tensor)
+        return img_upscale_numpy
 
     def upscale_using_patches(self, img_lq: np.array, slice_dim=256, slice_overlap=0, keep_pbar=False) -> np.array:
         """Apply super resolution on smaller patches and return full image"""
@@ -132,33 +148,3 @@ class SwinIR_SR:
             pbar.set_postfix(Status='Done')
 
         return np.uint8(img_hq)
-
-    @property
-    def weights_name(self):
-        if self.model_type == 'classical_sr':
-            return f'001_classicalSR_DF2K_s64w8_SwinIR-M_x{self.scale}.pth'
-
-        elif self.model_type == 'lightweight':
-            return f'002_lightweightSR_DIV2K_s64w8_SwinIR-S_x{self.scale}.pth'
-
-        elif self.model_type == 'real_sr':
-            return f'003_realSR_BSRGAN_DFO_s64w8_SwinIR-M_x4_GAN.pth'
-
-    @property
-    def weights_folder(self):
-        return f'{os.path.dirname(__file__)}/weights'
-
-    @property
-    def weights_path(self):
-        return f'{self.weights_folder}/{self.weights_name}'
-
-    @property
-    def scales(self):
-        if self.model_type == 'classical_sr':
-            return [2, 3, 4, 8]
-
-        elif self.model_type == 'lightweight':
-            return [2, 3, 4]
-
-        elif self.model_type == 'real_sr':
-            return [4]
