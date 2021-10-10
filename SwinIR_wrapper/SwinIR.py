@@ -25,7 +25,7 @@ MODEL_SCALES = {
 class SwinIR_SR:
     def __init__(self, model_type: str, scale: int):
         assert model_type in MODEL_TYPES, f'unknown model_type, please choose from: {MODEL_TYPES}'
-        assert scale in MODEL_SCALES[model_type], 'unsupported scale for this model_type'
+        assert scale in MODEL_SCALES[model_type], f'unsupported scale for model type {model_type}, please choose from {MODEL_SCALES[model_type]}'
 
         self.model_type = model_type
         self.scale = scale
@@ -84,7 +84,6 @@ class SwinIR_SR:
     @staticmethod
     def _process_img_for_model(img: np.array) -> torch.tensor:
         """cv2 format - np.array HWC-BGR -> model format torch.tensor NCHW-RGB. (from the official repo)"""
-        # (from the official repo)
         img = img.astype(np.float32) / 255.  # image to HWC-BGR, float32
         img = np.transpose(img if img.shape[2] == 1 else img[:, :, [2, 1, 0]], (2, 0, 1))  # HCW-BGR to CHW-RGB
         img = torch.from_numpy(img).float().unsqueeze(0).to(device)  # CHW-RGB to NCHW-RGB
